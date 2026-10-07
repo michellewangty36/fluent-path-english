@@ -1,0 +1,30 @@
+name: Change access code
+# Run this after you change the ACCESS_CODE secret.
+# Everyone will need the new code; the old one stops working.
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Lock the course with the new code
+        env:
+          SOURCE_KEY: ${{ secrets.SOURCE_KEY }}
+          ACCESS_CODE: ${{ secrets.ACCESS_CODE }}
+        run: |
+          if [ -z "$ACCESS_CODE" ]; then echo "::error::ACCESS_CODE is missing. Add it under Settings > Secrets and variables > Actions."; exit 1; fi
+          node tools/seal.mjs unlock "$SOURCE_KEY" src.enc "$RUNNER_TEMP/app.html"
+          node tools/build.mjs "$ACCESS_CODE" "$RUNNER_TEMP/app.html" index.html > /dev/null
+      - name: Publish
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Change access code"
+          git push
