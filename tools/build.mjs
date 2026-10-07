@@ -2,11 +2,12 @@
 import { webcrypto as c } from 'node:crypto'; import fs from 'node:fs';
 const [code, inp, out] = process.argv.slice(2);
 const enc = new TextEncoder(), b64 = u => Buffer.from(u).toString('base64');
+const HEAD = '<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><meta name="apple-mobile-web-app-title" content="Fluent Path"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">';
 const salt = c.getRandomValues(new Uint8Array(16)), iv = c.getRandomValues(new Uint8Array(12)), ITER = 300000;
 const base = await c.subtle.importKey('raw', enc.encode(code.trim().toLowerCase()), 'PBKDF2', false, ['deriveKey']);
 const key = await c.subtle.deriveKey({name:'PBKDF2', salt, iterations:ITER, hash:'SHA-256'}, base, {name:'AES-GCM', length:256}, false, ['encrypt']);
-const ct = new Uint8Array(await c.subtle.encrypt({name:'AES-GCM', iv}, key, enc.encode(fs.readFileSync(inp,'utf8'))));
-const gate = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fluent Path English</title>
+const ct = new Uint8Array(await c.subtle.encrypt({name:'AES-GCM', iv}, key, enc.encode(fs.readFileSync(inp,'utf8').replace(/<head>/i, '<head>'+HEAD))));
+const gate = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fluent Path English</title>${HEAD}
 <meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#16213B">
 <style>:root{--bg:#F2F4F8;--card:#fff;--ink:#16213B;--muted:#5A6378;--line:#D8DDE7;--hl:#FFE45C;--bad:#C23A3A}
 @media (prefers-color-scheme:dark){:root{--bg:#0E1424;--card:#161F33;--ink:#E6EBF5;--muted:#9BA6BD;--line:#283450;--bad:#FF7A7A;color-scheme:dark}}
