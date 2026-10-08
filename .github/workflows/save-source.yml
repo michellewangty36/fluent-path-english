@@ -1,0 +1,32 @@
+name: Save course source
+# Runs by itself when a new version of the course (index.html) is pushed.
+# It keeps src.enc in step, so "Change access code" always rebuilds the latest version.
+on:
+  push:
+    branches: [main]
+    paths: [index.html]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  save:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Re-lock the source with SOURCE_KEY
+        env:
+          SOURCE_KEY: ${{ secrets.SOURCE_KEY }}
+          ACCESS_CODE: ${{ secrets.ACCESS_CODE }}
+        run: |
+          node tools/open.mjs "$ACCESS_CODE" index.html "$RUNNER_TEMP/app.html"
+          node tools/seal.mjs lock "$SOURCE_KEY" "$RUNNER_TEMP/app.html" src.enc
+      - name: Publish
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src.enc
+          git commit -m "Save course source" || exit 0
+          git push

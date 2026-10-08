@@ -21,4 +21,5 @@ About two minutes later the site uses the new code, and the old code stops worki
 ## Files
 - `index.html`: the published, code-locked course.
 - `src.enc`: the course source, encrypted with `SOURCE_KEY`.
-- `tools/build.mjs`: locks the course with an access code. `tools/seal.mjs`: encrypts and decrypts `src.enc`.
+- `tools/build.mjs`: locks the course with an access code. `tools/seal.mjs`: encrypts and decrypts `src.enc`. `tools/open.mjs`: unlocks `index.html` with the access code.
+- The **Save course source** workflow runs by itself whenever a new `index.html` is pushed, so `src.enc` always holds the latest version.
